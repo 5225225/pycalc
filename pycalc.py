@@ -7,8 +7,9 @@ import math
 from enum import Enum
 
 import ply.lex as lex
-import ply.yacc as yacc
-import readline
+
+import readline  # noqa, this line does stuff automagically.
+
 
 def preproc(s):
     s = s.replace("¹", "**(1)")
@@ -16,6 +17,7 @@ def preproc(s):
     s = s.replace("³", "**(3)")
 
     return s
+
 
 def assert_eq(x1, x2):
     if x1 == x2:
@@ -25,6 +27,7 @@ def assert_eq(x1, x2):
         print(x1)
         print(x2)
         raise AssertionError
+
 
 def test(infix, rpn, result):
     lexer = lex.lex()
@@ -37,9 +40,11 @@ def test(infix, rpn, result):
     if result is not None:
         assert_eq(eval_rpn(to_rpn(toks), {}), result)
 
+
 class assoc(Enum):
     left = 0
     right = 1
+
 
 operassoc = {
     "PLUS": assoc.left,
@@ -69,6 +74,7 @@ prec = {
     "ASSIGN": 10,
 }
 
+
 def to_rpn(toks):
     toks = toks[:]
     # Make a copy of this so we DON'T update the original.
@@ -97,13 +103,13 @@ def to_rpn(toks):
                 o2 = stack[-1]
                 if (operassoc[o1.type] == assoc.left and prec[o1.type] <= prec[o2.type]) or \
                    (operassoc[o1.type] == assoc.right and prec[o1.type] < prec[o2.type]):
-                    
+
                     output.append(stack.pop())
                 else:
                     break
 
             stack.append(o1)
-                    
+
         elif t.type == "LPAREN":
             stack.append(t)
         elif t.type == "RPAREN":
@@ -114,7 +120,6 @@ def to_rpn(toks):
                 output.append(stack.pop())
         else:
             raise ValueError("Unknown token type {}".format(t))
-
 
     while len(stack) > 0:
         output.append(stack.pop())
@@ -137,6 +142,7 @@ argcounts = {
     "acos": 1,
 }
 
+
 def varr(x, lvars):
     if isinstance(x, numbers.Real):
         return x
@@ -146,9 +152,9 @@ def varr(x, lvars):
         return x.value
     else:
         return x
-    
-def eval_rpn(intoks, lvars):
 
+
+def eval_rpn(intoks, lvars):
     values = [x for x in intoks]
 
     stack = []
@@ -162,7 +168,6 @@ def eval_rpn(intoks, lvars):
                 argcount = len(stack)
             else:
                 argcount = argcounts[t.value]
-            
             args = []
 
             while len(args) < argcount:
@@ -235,12 +240,11 @@ def eval_rpn(intoks, lvars):
                     for index, item in enumerate(func[0]):
                         fargs[item.value] = varr(args[index], lvars)
                     if (t.value in usr_basecases) and \
-                    (tuple(varr(x, {}) for x in args) in usr_basecases[t.value]):
+                            (tuple(varr(x, {}) for x in args) in usr_basecases[t.value]):
                         r = usr_basecases[t.value][tuple(varr(x, {}) for x in args)]
                         stack.append(r[0])
                     else:
                         stack.append(eval_rpn(func[1], fargs))
-                    
 
                 else:
                     newfunc = t
@@ -256,7 +260,7 @@ def eval_rpn(intoks, lvars):
 
                     usr_funcs[newfunc.value] = (args, funccode)
                     argcounts[newfunc.value] = len(args)
-                    
+
                     return
             elif t.type == "FUNC_BASE":
                 funcname = t.value.replace("@", "")
@@ -272,13 +276,12 @@ def eval_rpn(intoks, lvars):
 
                 if funccode[-1].type == "ASSIGN":
                     funccode.pop()
-                
+
                 if funcname in usr_basecases:
                     usr_basecases[funcname][tuple([varr(x, {}) for x in args])] = funccode
                 else:
                     usr_basecases[funcname] = {}
                     usr_basecases[funcname][tuple([varr(x, {}) for x in args])] = funccode
-                print(usr_basecases)
 
             else:
                 print("Unknown token")
@@ -293,7 +296,6 @@ def eval_rpn(intoks, lvars):
         print(stack)
         return
 
-            
 
 tokens = (
     "PLUS",
@@ -341,6 +343,7 @@ t_VAR = "[A-Za-z]+"
 
 t_COMMA = ","
 
+
 def t_NUMBER(t):
     "_?\d*\.?[\d]+"
     t.value = t.value.replace("_", "-")
@@ -349,6 +352,7 @@ def t_NUMBER(t):
     except:
         t.value = float(t.value)
     return t
+
 
 def t_FUNC(t):
     "@?[A-Za-z_]+(?=\()"
@@ -364,17 +368,12 @@ def t_newline(t):
     t.lexer.lineno += len(t.value)
 
 
-t_ignore  = ' \t'
+t_ignore = " \t"
+
 
 def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
-
-
-
-
-# Test cases slightly modified from https://en.wikipedia.org/wiki/Shunting-yard_algorithm
-
 
 
 variables = {}
@@ -390,7 +389,6 @@ try:
         toks = []
         for tok in lexer:
             toks.append(tok)
-        print(toks)
         eval_rpn(to_rpn(toks), variables)
 except FileNotFoundError:
     pass
@@ -399,7 +397,7 @@ test("3 + 4", "3 4 +", 7)
 test("5 + ((1 + 2) * 4) - 3", "5 1 2 + 4 * + 3 -", 14)
 test("3 + 4 * 2 / (1/2) ** 2 ** 3", "3 4 2 * 1 2 / 2 3 ** ** / +", 2051)
 
-test("fac(4)", None, 24)
+test("fac(10)", None, 89)
 
 while True:
     lexer = lex.lex()
@@ -427,8 +425,6 @@ while True:
 
     if result is not None:
         print(result)
-        
-
 
     if len(sys.argv) >= 2:
         break
