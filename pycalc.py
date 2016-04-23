@@ -8,9 +8,6 @@ from enum import Enum
 
 import ply.lex as lex
 
-import readline  # noqa, this line does stuff automagically.
-
-
 def preproc(s):
     s = s.replace("¹", "**(1)")
     s = s.replace("²", "**(2)")
