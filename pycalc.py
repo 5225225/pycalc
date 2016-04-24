@@ -137,6 +137,7 @@ argcounts = {
     "cos": 1,
     "asin": 1,
     "acos": 1,
+    "debug": 1,
 }
 
 
@@ -231,6 +232,9 @@ def eval_rpn(intoks, lvars):
                 if t.value == "acos":
                     res = math.acos(varr(args[0], lvars))
                     stack.append(res)
+                if t.value == "debug":
+                    global debug
+                    debug = not(debug)
                 elif t.value in usr_funcs:
                     func = usr_funcs[t.value]
                     fargs = {}
@@ -379,6 +383,8 @@ variables["e"] = math.e
 usr_funcs = {}
 usr_basecases = {}
 
+debug = False
+
 try:
     for line in open(os.path.expanduser("~/.config/pycalc_init")).readlines():
         lexer = lex.lex()
@@ -404,7 +410,17 @@ while True:
     else:
         instr = input("» ")
 
+    if debug:
+        print("=== Input string ===")
+        print(instr)
+        print()
+
     instr = preproc(instr)
+
+    if debug:
+        print("=== Preprocessed string ===")
+        print(instr)
+        print()
 
     lexer.input(instr)
 
@@ -413,12 +429,24 @@ while True:
     for tok in lexer:
         toks.append(tok)
 
+    if debug:
+        print("=== Tokens ===")
+        print(toks)
+        print()
+
     result = None
+
+    if debug:
+        print("=== RPN ===")
+        print(to_rpn(toks))
+        print()
 
     try:
         result = eval_rpn(to_rpn(toks), variables)
     except Exception as e:
         traceback.print_exc()
+        if debug:
+            import pdb; pdb.post_mortem()
 
     if result is not None:
         print(result)
