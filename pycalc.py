@@ -8,6 +8,7 @@ from enum import Enum
 
 import ply.lex as lex
 
+
 def preproc(s):
     s = s.replace("¹", "**(1)")
     s = s.replace("²", "**(2)")
@@ -51,6 +52,8 @@ operassoc = {
     "LSHIFT": assoc.left,
     "RSHIFT": assoc.left,
 
+    "COMPARE": assoc.left,
+
     "EXP": assoc.right,
     "ASSIGN": assoc.right,
 
@@ -68,6 +71,8 @@ prec = {
     "LSHIFT": 20,
     "RSHIFT": 20,
 
+    "COMPARE": 15,
+
     "ASSIGN": 10,
 }
 
@@ -82,6 +87,9 @@ def to_rpn(toks):
         t = toks.pop(0)
 
         if t.type in ("NUMBER", "VAR"):
+            output.append(t)
+
+        elif t.type == "THEN":
             output.append(t)
 
         elif t.type == "FUNC":
@@ -132,6 +140,13 @@ argcounts = {
     ">>": 2,
     "<<": 2,
     "=": 2,
+    "==": 2,
+    ">=": 2,
+    "<=": 2,
+    ">": 2,
+    "<": 2,
+    "!=": 2,
+    "if": 2,
 
     "sin": 1,
     "cos": 1,
@@ -142,6 +157,8 @@ argcounts = {
 
 
 def varr(x, lvars):
+    if x is None:
+        return None
     if isinstance(x, numbers.Real):
         return x
     elif x.type == "VAR" and x.value in lvars:
@@ -164,6 +181,8 @@ def eval_rpn(intoks, lvars):
         else:
             if t.type == "FUNC" and t.value not in usr_funcs:
                 argcount = len(stack)
+            elif t.type == "THEN":
+                argcount = 1
             else:
                 argcount = argcounts[t.value]
             args = []
@@ -216,8 +235,34 @@ def eval_rpn(intoks, lvars):
                 res = x1 ** x2
                 stack.append(res)
 
+            elif t.type == "COMPARE":
+                x1 = varr(args[0], lvars)
+                x2 = varr(args[1], lvars)
+
+                if t.value == "==":
+                    res = int(x1 == x2)
+                if t.value == ">=":
+                    res = int(x1 >= x2)
+                if t.value == "<=":
+                    res = int(x1 <= x2)
+                if t.value == ">":
+                    res = int(x1 > x2)
+                if t.value == "<":
+                    res = int(x1 < x2)
+                if t.value == "!=":
+                    res = int(x1 != x2)
+
+                stack.append(res)
+
             elif t.type == "ASSIGN":
                 variables[args[0].value] = varr(args[1], {})
+
+            elif t.type == "THEN":
+                x1 = varr(args[0], lvars)
+                if x1 > 0:
+                    stack.append(eval_rpn(values, lvars))
+                else:
+                    return
 
             elif t.type == "FUNC":
                 if t.value == "sin":
@@ -307,6 +352,8 @@ tokens = (
     "RSHIFT",
     "EXP",
     "ASSIGN",
+    "COMPARE",
+    "THEN",
     "NUMBER",
     "LPAREN",
     "RPAREN",
@@ -317,7 +364,7 @@ tokens = (
 )
 
 funcs = [
-    "PLUS", "MINUS", "TIMES", "DIVIDE", "LSHIFT", "RSHIFT", "EXP", "ASSIGN",
+    "PLUS", "MINUS", "TIMES", "DIVIDE", "LSHIFT", "RSHIFT", "EXP", "ASSIGN", "COMPARE"
 ]
 
 # -=- lex code -=-
@@ -331,6 +378,7 @@ t_LSHIFT = "<<"
 t_RSHIFT = ">>"
 t_EXP = "\*\*"
 t_ASSIGN = "="
+t_COMPARE = "(==|>=|<=|!=|>|<)"
 
 t_LPAREN = "\("
 t_RPAREN = "\)"
@@ -352,6 +400,14 @@ def t_NUMBER(t):
         t.value = int(t.value)
     except:
         t.value = float(t.value)
+    return t
+
+
+# Done in a function to force priority over t_VAR as priority is determined by regex length,
+# assuming they're both of the same type (Both functions/both plain strings). Functions take
+# priority over strings, however.
+def t_THEN(t):
+    "then"
     return t
 
 
@@ -385,22 +441,24 @@ usr_basecases = {}
 
 debug = False
 
-try:
-    for line in open(os.path.expanduser("~/.config/pycalc_init")).readlines():
-        lexer = lex.lex()
-        lexer.input(preproc(line))
-        toks = []
-        for tok in lexer:
-            toks.append(tok)
-        eval_rpn(to_rpn(toks), variables)
-except FileNotFoundError:
-    pass
+if False:
+    try:
+        for line in open(os.path.expanduser("~/.config/pycalc_init")).readlines():
+            lexer = lex.lex()
+            lexer.input(preproc(line))
+            toks = []
+            for tok in lexer:
+                toks.append(tok)
+            eval_rpn(to_rpn(toks), variables)
+    except FileNotFoundError:
+        pass
 
-test("3 + 4", "3 4 +", 7)
-test("5 + ((1 + 2) * 4) - 3", "5 1 2 + 4 * + 3 -", 14)
-test("3 + 4 * 2 / (1/2) ** 2 ** 3", "3 4 2 * 1 2 / 2 3 ** ** / +", 2051)
+if False:
+    test("3 + 4", "3 4 +", 7)
+    test("5 + ((1 + 2) * 4) - 3", "5 1 2 + 4 * + 3 -", 14)
+    test("3 + 4 * 2 / (1/2) ** 2 ** 3", "3 4 2 * 1 2 / 2 3 ** ** / +", 2051)
 
-test("fib(10)", None, 89)
+    test("fib(10)", None, 89)
 
 while True:
     lexer = lex.lex()
@@ -446,7 +504,8 @@ while True:
     except Exception as e:
         traceback.print_exc()
         if debug:
-            import pdb; pdb.post_mortem()
+            import pdb
+            pdb.post_mortem()
 
     if result is not None:
         print(result)
