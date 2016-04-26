@@ -3,7 +3,7 @@
 import sys
 
 try:
-    import readline
+    import readline  # noqa: this is used simply by being imported.
     # No idea if this is a license violation. Hope it isn't.
 except ImportError:
     print("Could not find readline, you will likely get no line editing functionality")
@@ -12,8 +12,8 @@ if sys.version_info.major < 3:
     print("This program is for python version 3 only.")
     sys.exit(3)
 
-import lexer
-import execute
+import lexer  # noqa:  These have to go here, as they use Unicode, which py2 can't handle.
+import execute  # noqa
 
 while True:
     instr = input("» ")
