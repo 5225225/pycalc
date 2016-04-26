@@ -1,0 +1,58 @@
+This program is written to run on python 3, and should work with python 2 with
+minor changes. This will not be tested, and I will make no attempt to work
+around python2's brokenness.
+
+Dependencies
+------------
+
+* ply (Python Lex-Yacc), http://www.dabeaz.com/ply/.
+
+* enum (If on python version 2)
+
+Usage
+-----
+
+Type in expressions into the prompt.
+
+Operations
+----------
+
+All basic operations are supported (+, /, -, *, ** (powers), << >> (Bit shifts)).
+
+Unary negation is done using underscore (_). This *must* be placed next to the number, doing _ 4 is
+illegal. I hope to improve this in the future.
+
+Comparisons are done using ==, >=, <=, <, >, !=, which have the same meaning as they do in
+python. If the comparison is true, it pushes a 1 onto the stack. If it's false, it pushes a 0.
+
+Variables are done using `=`, in the format `x = 4`. That assigns the value 4 to x. The right hand
+side is evaluated, so you can do `x = 4 + 5`. Variables can be over-written.
+
+Functions
+---------
+
+There are some built-in functions, sin, cos, asin, acos. The first 2 are self-explanatory, the
+next are the inverse functions.
+
+Functions are invoked by func(args). Functions may have more than one argument.
+
+User defined functions are created by
+
+func(x) = 4 + x
+
+The equals sign is optional, and you can do more than one argument, such as
+
+func(x, y, z) = x * y + z.
+
+Functions can also be recursively defined. Note that you must provide a basecase (using @ prefix), or you will get a
+recursion error.
+
+factorial(n) = n * factorial(n-1)
+@factorial(0) = 1
+
+
+Conditionals
+------------
+
+Of the format `(condition) then (code)`. The code is only executed if the evaluated condition is
+greater than 0.
