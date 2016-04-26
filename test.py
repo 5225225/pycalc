@@ -130,7 +130,7 @@ test("sum(4,2+(1),0)", 7)
 assert_raises("test('f(x)')", ValueError)
 
 # Trying to add a basecase to a non-existent function
-assert_raises("test('@f(0) = 4')", KeyError)
+assert_raises("test('@f(0) = 4')", NameError)
 
 # Trying to add a basecase with no body
 test("f(x) = x")

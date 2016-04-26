@@ -65,7 +65,10 @@ def eval_rpn(intoks, lvars=None):
             elif t.type == "THEN":
                 argcount = 1
             else:
-                argcount = argcounts[t.value]
+                if t.value in argcounts:
+                    argcount = argcounts[t.value]
+                else:
+                    raise NameError("function {} not defined".format(t.value))
             args = []
 
             while len(args) < argcount:
