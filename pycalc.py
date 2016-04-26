@@ -1,4 +1,10 @@
+# vim: set fileencoding=utf-8
+
 import sys
+
+if sys.version_info.major < 3:
+    print("This program is for python version 3 only.")
+    sys.exit(3)
 
 import lexer
 import execute
