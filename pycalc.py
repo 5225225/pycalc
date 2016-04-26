@@ -20,7 +20,13 @@ while True:
     toks = lexer.to_toks(instr)
     rpn = lexer.to_rpn(toks)
 
-    result = execute.eval_rpn(rpn)
+    result = None
+    try:
+        result = execute.eval_rpn(rpn)
+    except RecursionError:
+        print("Recursion limit hit, stopping.")
+    except Exception as e:
+        print(e)
 
     if result is not None:
         print(result)
