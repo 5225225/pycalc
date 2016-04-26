@@ -2,6 +2,12 @@
 
 import sys
 
+try:
+    import readline
+    # No idea if this is a license violation. Hope it isn't.
+except ImportError:
+    print("Could not find readline, you will likely get no line editing functionality")
+
 if sys.version_info.major < 3:
     print("This program is for python version 3 only.")
     sys.exit(3)
