@@ -30,8 +30,8 @@ def assert_raises(to_execute, exception):
     raise AssertionError
 
 
-def test(infix, expect_result=None, expect_rpn=None, accuracy=None):
-    toks = lexer.to_toks(infix)
+def test(infix, expect_result=None, expect_rpn=None, accuracy=None, inv_raise=True):
+    toks = lexer.to_toks(infix, inv_raise=inv_raise)
     rpn = " ".join([str(x.value) for x in lexer.to_rpn(toks)])
 
     result = execute.eval_rpn(lexer.to_rpn(toks))
@@ -157,9 +157,12 @@ assert_raises("test('4 4 + 4')", IndexError)
 
 assert_raises("test('4 +')", IndexError)
 
-print("Now testing the self test. This should throw an assertion error.")
+print("***  Now testing the self test. This should throw an assertion error.***")
 
 assert_raises("test('2 + 2', 5)", AssertionError)
+
+print("***  End self test ***")
+
 assert_raises("4/0", ZeroDivisionError)
 assert_raises("assert_raises('4/0', IndexError)", AssertionError)
 
@@ -174,4 +177,8 @@ assert_eq(lexer.preproc("foo¹bar"), "foo**(1)bar")
 assert_eq(lexer.preproc("foo²bar"), "foo**(2)bar")
 assert_eq(lexer.preproc("foo³bar"), "foo**(3)bar")
 
-test("4 +» 4", 8)
+assert_raises('test("4 +» 4", 8)', ValueError)
+
+print("*** This should print an Illegal Character warning ***")
+test("4 +» 4", 8, inv_raise=False)
+print("*** End test ***")

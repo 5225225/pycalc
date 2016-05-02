@@ -214,14 +214,20 @@ def t_FUNC(t):
 
 
 t_ignore = " \t"
+invalid_raise = False
 
 
 def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
+    if invalid_raise:
+        raise ValueError("Illegal character {}".format(t.value[0]))
+    else:
+        print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
 
 
-def to_toks(instr):
+def to_toks(instr, inv_raise=False):
+    global invalid_raise
+    invalid_raise = inv_raise
     lexer = lex.lex()
 
     lexer.input(instr)
