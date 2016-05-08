@@ -1,5 +1,6 @@
 import lexer
 import execute
+import parser
 
 
 class mock_token:
@@ -32,9 +33,9 @@ def assert_raises(to_execute, exception):
 
 def test(infix, expect_result=None, expect_rpn=None, accuracy=None, inv_raise=True):
     toks = lexer.to_toks(infix, inv_raise=inv_raise)
-    rpn = " ".join([str(x.value) for x in lexer.to_rpn(toks)])
+    rpn = " ".join([str(x.value) for x in parser.to_rpn(toks)])
 
-    result = execute.eval_rpn(lexer.to_rpn(toks))
+    result = execute.eval_rpn(parser.to_rpn(toks))
 
     if expect_rpn is not None:
         assert_eq(expect_rpn, rpn)
@@ -149,7 +150,7 @@ execute.argcounts[test_token.value] = 0
 
 assert_raises("execute.eval_rpn([test_token])", TypeError)
 
-assert_raises("lexer.to_rpn([test_token])", ValueError)
+assert_raises("parser.to_rpn([test_token])", ValueError)
 
 assert_raises("test('4 4 + 4')", IndexError)
 

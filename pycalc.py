@@ -14,11 +14,12 @@ if sys.version_info.major < 3:
 
 import lexer  # noqa:  These have to go here, as they use Unicode, which py2 can't handle.
 import execute  # noqa
+import parser
 
 while True:
     instr = input("» ")
     toks = lexer.to_toks(instr)
-    rpn = lexer.to_rpn(toks)
+    rpn = parser.to_rpn(toks)
 
     result = None
     try:
